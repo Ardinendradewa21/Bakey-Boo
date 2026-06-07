@@ -37,7 +37,7 @@ export default function LoginPage() {
       password: data.password,
     });
 
-    const token = authData?.session?.access_token || (authData as any)?.accessToken;
+    const token = authData?.accessToken;
     if (authError || !token) {
       setError(authError?.message || "Gagal masuk. Periksa kembali email dan password Anda.");
       setIsLoading(false);

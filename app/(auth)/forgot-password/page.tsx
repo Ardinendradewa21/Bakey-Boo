@@ -26,7 +26,8 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     setError(null);
 
-    const { error: resetError } = await insforge.auth.resetPasswordForEmail(email, {
+    const { error: resetError } = await insforge.auth.sendResetPasswordEmail({
+      email,
       redirectTo: `${window.location.origin}/update-password`,
     });
 

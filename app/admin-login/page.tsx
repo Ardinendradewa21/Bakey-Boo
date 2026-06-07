@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
       password: data.password,
     });
 
-    const token = authData?.session?.access_token || (authData as any)?.accessToken;
+    const token = authData?.accessToken;
     if (authError || !authData?.user || !token) {
       setError("Kredensial tidak valid. Silakan periksa kembali password Anda.");
       setIsLoading(false);

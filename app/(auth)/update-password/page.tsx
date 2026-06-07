@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { insforge } from "@/lib/insforge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,26 +11,25 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
-export default function UpdatePasswordPage() {
+function UpdatePasswordForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Optional: check if user is actually in a recovery session
-    const checkSession = async () => {
-      const { data: { session } } = await insforge.auth.getSession();
-      if (!session) {
-        // Not necessarily an error if they just clicked the link, 
-        // Supabase handles the #access_token in URL automatically
-      }
-    };
-    checkSession();
-  }, []);
+    // Check if OTP or token is in URL
+    const token = searchParams.get("token") || searchParams.get("otp") || searchParams.get("code");
+    if (token) {
+      setOtp(token);
+    }
+  }, [searchParams]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,12 +41,17 @@ export default function UpdatePasswordPage() {
       setError("Konfirmasi password tidak cocok");
       return;
     }
+    if (!otp) {
+      setError("Kode verifikasi (OTP) wajib diisi");
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
 
-    const { error: updateError } = await insforge.auth.updateUser({
-      password: password
+    const { error: updateError } = await insforge.auth.resetPassword({
+      newPassword: password,
+      otp: otp
     });
 
     if (updateError) {
@@ -76,6 +80,19 @@ export default function UpdatePasswordPage() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+          
+          <div className="space-y-2">
+            <Label htmlFor="otp">Kode Verifikasi (OTP)</Label>
+            <Input
+              id="otp"
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              disabled={isLoading}
+              required
+              placeholder="Masukkan kode OTP dari email"
+            />
+          </div>
           
           <div className="space-y-2">
             <Label htmlFor="password">Password Baru</Label>
@@ -129,5 +146,13 @@ export default function UpdatePasswordPage() {
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+export default function UpdatePasswordPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Memuat...</div>}>
+      <UpdatePasswordForm />
+    </Suspense>
   );
 }
