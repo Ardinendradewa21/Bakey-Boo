@@ -40,8 +40,8 @@ export function CartSheet() {
           )}
         </div>
       </SheetTrigger>
-      <SheetContent className="flex flex-col w-full sm:max-w-lg bg-white border-l-0">
-        <SheetHeader className="px-1 text-left space-y-2.5 pb-6 border-b border-surface-100">
+      <SheetContent className="flex flex-col w-full sm:max-w-lg bg-white border-l-0 sm:p-8 p-6">
+        <SheetHeader className="px-0 text-left space-y-2.5 pb-6 border-b border-surface-100">
           <SheetTitle className="font-heading font-bold text-2xl flex items-center gap-2">
             Keranjang Belanja
             <span className="bg-brand-50 text-brand-600 text-sm font-semibold px-2 py-0.5 rounded-md">
@@ -67,7 +67,7 @@ export function CartSheet() {
           </div>
         ) : (
           <>
-            <ScrollArea className="flex-1 -mx-6 px-6">
+            <ScrollArea className="flex-1 -mx-6 sm:-mx-8 px-6 sm:px-8">
               <div className="flex flex-col gap-6 py-6">
                 {cart.items.map((item, index) => (
                   <div key={`${item.product.id}-${item.selectedFlavor}-${item.selectedSize}-${index}`} className="flex gap-4 group">
@@ -107,10 +107,33 @@ export function CartSheet() {
                       </div>
                       
                       <div className="flex items-center justify-between mt-3">
-                        <div className="flex items-center gap-1 text-surface-600 text-sm bg-surface-50 px-2 py-1 rounded-md border border-surface-100">
-                          <span className="font-medium text-surface-900">{item.quantity}</span>
-                          <span className="text-xs">x</span>
-                          <span>{formatPrice(item.product.price)}</span>
+                        <div className="flex items-center bg-surface-50 rounded-lg border border-surface-200">
+                          <button
+                            type="button"
+                            onClick={() => cart.updateQuantity(item.product.id, item.quantity - 1, item.selectedFlavor, item.selectedSize)}
+                            className="w-8 h-8 flex items-center justify-center text-surface-500 hover:text-brand-600 hover:bg-brand-50 rounded-l-lg transition-colors font-medium"
+                          >
+                            -
+                          </button>
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value);
+                              if (!isNaN(val) && val > 0) {
+                                cart.updateQuantity(item.product.id, val, item.selectedFlavor, item.selectedSize);
+                              }
+                            }}
+                            className="w-10 h-8 text-center text-sm font-medium bg-transparent border-x border-surface-200 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => cart.updateQuantity(item.product.id, item.quantity + 1, item.selectedFlavor, item.selectedSize)}
+                            className="w-8 h-8 flex items-center justify-center text-surface-500 hover:text-brand-600 hover:bg-brand-50 rounded-r-lg transition-colors font-medium"
+                          >
+                            +
+                          </button>
                         </div>
                         <span className="font-extrabold text-brand-600 text-sm sm:text-base">
                           {formatPrice(item.product.price * item.quantity)}

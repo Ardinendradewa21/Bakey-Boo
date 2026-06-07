@@ -15,8 +15,6 @@ export function Navbar() {
           
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-surface-600">
             <Link href="/products" className="hover:text-brand-600 transition-colors">Semua Menu</Link>
-            <Link href="/products?category=aneka-roti" className="hover:text-brand-600 transition-colors">Aneka Roti</Link>
-            <Link href="/products?category=donat-spesial" className="hover:text-brand-600 transition-colors">Donat Spesial</Link>
             <Link href="/tentang" className="hover:text-brand-600 transition-colors">Tentang Kami</Link>
           </div>
         </div>

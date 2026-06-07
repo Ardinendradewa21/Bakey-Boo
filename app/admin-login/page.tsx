@@ -41,7 +41,8 @@ export default function AdminLoginPage() {
       password: data.password,
     });
 
-    if (authError || !authData?.user || !authData?.accessToken) {
+    const token = authData?.session?.access_token || (authData as any)?.accessToken;
+    if (authError || !authData?.user || !token) {
       setError("Kredensial tidak valid. Silakan periksa kembali password Anda.");
       setIsLoading(false);
       return;
@@ -52,7 +53,7 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ access_token: authData.accessToken }),
+        body: JSON.stringify({ access_token: token }),
       });
 
       if (!res.ok) {

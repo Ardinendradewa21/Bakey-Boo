@@ -195,7 +195,7 @@ export function AddressManager({ userId }: { userId: string }) {
               </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label>Nomor Handphone (WhatsApp)</Label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="08123456789" type="tel" required />
+                <Input value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))} placeholder="08123456789" type="tel" required />
               </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label>Alamat Lengkap</Label>

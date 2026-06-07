@@ -13,13 +13,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Eye, EyeOff } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -148,13 +150,23 @@ export default function RegisterPage() {
 
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              {...register("password")}
-              disabled={isLoading}
-              className={errors.password ? "border-error focus-visible:ring-error" : ""}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                {...register("password")}
+                disabled={isLoading}
+                className={errors.password ? "border-error focus-visible:ring-error pr-10" : "pr-10"}
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
             {errors.password && (
               <p className="text-sm text-error mt-1">{errors.password.message}</p>
             )}
@@ -162,13 +174,23 @@ export default function RegisterPage() {
 
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              {...register("confirmPassword")}
-              disabled={isLoading}
-              className={errors.confirmPassword ? "border-error focus-visible:ring-error" : ""}
-            />
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                {...register("confirmPassword")}
+                disabled={isLoading}
+                className={errors.confirmPassword ? "border-error focus-visible:ring-error pr-10" : "pr-10"}
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
             {errors.confirmPassword && (
               <p className="text-sm text-error mt-1">{errors.confirmPassword.message}</p>
             )}

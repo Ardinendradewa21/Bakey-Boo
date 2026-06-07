@@ -13,12 +13,31 @@ import Image from "next/image";
 import { buttonVariants } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Star } from "lucide-react";
+import { toast } from "sonner";
 
 export default function PurchasesPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Review state
+  const [reviewOrderId, setReviewOrderId] = useState<string | null>(null);
+  const [reviewProductId, setReviewProductId] = useState<string | null>(null);
+  const [rating, setRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   useEffect(() => {
     checkUserAndFetch();
@@ -61,6 +80,37 @@ export default function PurchasesPage() {
         return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Menunggu Pembayaran</Badge>;
       default:
         return <Badge className="bg-red-100 text-red-800 border-red-200">Gagal</Badge>;
+    }
+  };
+
+  const submitReview = async () => {
+    if (!reviewOrderId || !reviewProductId || !user) return;
+    setIsSubmittingReview(true);
+    try {
+      const { error } = await insforge.database
+        .from("reviews")
+        .insert({
+          product_id: reviewProductId,
+          user_id: user.id,
+          order_id: reviewOrderId,
+          rating,
+          comment: reviewText
+        });
+        
+      if (error) throw error;
+      
+      toast.success("Ulasan berhasil dikirim!");
+      setReviewOrderId(null);
+      setReviewText("");
+      setRating(5);
+      
+      // Optionally re-fetch orders or mark the item as reviewed locally
+      // For now, simple re-fetch
+      checkUserAndFetch();
+    } catch (err) {
+      toast.error("Gagal mengirim ulasan.");
+    } finally {
+      setIsSubmittingReview(false);
     }
   };
 
@@ -148,7 +198,7 @@ export default function PurchasesPage() {
                       return (
                         <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 px-6 py-5">
                           {/* Thumbnail */}
-                          <div className="w-16 h-16 rounded-xl bg-surface-100 flex-shrink-0 flex items-center justify-center overflow-hidden relative border border-surface-200">
+                          <div className="w-20 h-20 rounded-xl bg-surface-100 flex-shrink-0 flex items-center justify-center overflow-hidden relative border border-surface-200">
                             {imageUrl ? (
                               <Image src={imageUrl} alt={product.title} fill className="object-cover" />
                             ) : (
@@ -157,23 +207,86 @@ export default function PurchasesPage() {
                           </div>
                           
                           {/* Info */}
-                          <div className="flex-1 min-w-0">
-                            <Link href={`/products/${product.slug}`} className="font-semibold text-surface-900 hover:text-brand-600 transition-colors line-clamp-1">
-                              {product.title}
-                            </Link>
-                            <div className="flex flex-wrap items-center gap-2 mt-1">
-                              <p className="text-xs text-surface-500 capitalize">
-                                {product.category}
-                              </p>
-                              {(variantFlavor || variantSize) && (
-                                <p className="text-[11px] font-medium text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-100">
-                                  {variantFlavor} {variantSize && `(${variantSize})`}
+                          <div className="flex-1 min-w-0 flex flex-col sm:flex-row justify-between w-full gap-4">
+                            <div>
+                              <Link href={`/products/${product.slug}`} className="font-semibold text-lg text-surface-900 hover:text-brand-600 transition-colors line-clamp-1">
+                                {product.title}
+                              </Link>
+                              <div className="flex flex-wrap items-center gap-2 mt-1 mb-2">
+                                <p className="text-sm text-surface-500 capitalize">
+                                  {product.category}
                                 </p>
+                                {(variantFlavor || variantSize) && (
+                                  <p className="text-xs font-medium text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-100">
+                                    {variantFlavor} {variantSize && `(${variantSize})`}
+                                  </p>
+                                )}
+                              </div>
+                              <p className="text-sm font-semibold text-surface-700">
+                                {formatPrice(item.price)} <span className="text-surface-400 font-normal">x {item.quantity || 1}</span>
+                              </p>
+                            </div>
+                            
+                            {/* Action / Price */}
+                            <div className="flex flex-col items-end justify-between">
+                              <p className="font-bold text-brand-600">
+                                {formatPrice(item.price * (item.quantity || 1))}
+                              </p>
+                              
+                              {(order.status === "completed" || order.status === "capture" || order.status === "settlement") && (
+                                <Dialog open={reviewOrderId === order.id && reviewProductId === product.id} onOpenChange={(open) => {
+                                  if (open) {
+                                    setReviewOrderId(order.id);
+                                    setReviewProductId(product.id);
+                                  } else {
+                                    setReviewOrderId(null);
+                                  }
+                                }}>
+                                  <DialogTrigger asChild>
+                                    <Button variant="outline" size="sm" className="mt-2 h-8 text-xs font-semibold text-brand-700 border-brand-200 hover:bg-brand-50">
+                                      Beri Ulasan
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="sm:max-w-md">
+                                    <DialogHeader>
+                                      <DialogTitle>Beri Ulasan Produk</DialogTitle>
+                                      <DialogDescription>
+                                        Bagaimana pendapat Anda tentang {product.title}?
+                                      </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="py-4 space-y-4">
+                                      <div className="flex items-center justify-center gap-2">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                          <button
+                                            key={star}
+                                            type="button"
+                                            onClick={() => setRating(star)}
+                                            className="focus:outline-none transition-transform hover:scale-110"
+                                          >
+                                            <Star 
+                                              className={`w-8 h-8 ${rating >= star ? 'fill-star text-star' : 'text-surface-300'}`} 
+                                            />
+                                          </button>
+                                        ))}
+                                      </div>
+                                      <Textarea
+                                        placeholder="Tulis ulasan Anda di sini..."
+                                        value={reviewText}
+                                        onChange={(e) => setReviewText(e.target.value)}
+                                        className="min-h-[100px]"
+                                      />
+                                      <Button 
+                                        className="w-full bg-brand-600 hover:bg-brand-700" 
+                                        onClick={submitReview}
+                                        disabled={isSubmittingReview}
+                                      >
+                                        {isSubmittingReview ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Kirim Ulasan"}
+                                      </Button>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
                               )}
                             </div>
-                            <p className="text-sm font-semibold text-brand-600 mt-1">
-                              {formatPrice(item.price)} <span className="text-xs text-surface-400 font-normal">x {item.quantity || 1}</span>
-                            </p>
                           </div>
 
                         </div>
@@ -200,21 +313,27 @@ export default function PurchasesPage() {
 
                     return (
                       <div className="bg-surface-50 px-6 py-4 border-t border-surface-200 text-sm">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-surface-500 font-medium mb-1">Metode Pengiriman</p>
-                            <p className="text-surface-900 capitalize font-semibold">{deliveryMethod}</p>
-                          </div>
-                          <div>
-                            <p className="text-surface-500 font-medium mb-1">Penerima</p>
-                            <p className="text-surface-900">{recipientName} • {phone}</p>
-                          </div>
-                          {deliveryMethod === "delivery" && address && (
-                            <div className="sm:col-span-2">
-                              <p className="text-surface-500 font-medium mb-1">Alamat Tujuan</p>
-                              <p className="text-surface-900 bg-white p-2 border border-surface-200 rounded-lg">{address}</p>
+                        <div className="flex flex-col sm:flex-row justify-between gap-6">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+                            <div>
+                              <p className="text-surface-500 font-medium mb-1">Metode Pengiriman</p>
+                              <p className="text-surface-900 capitalize font-semibold">{deliveryMethod}</p>
                             </div>
-                          )}
+                            <div>
+                              <p className="text-surface-500 font-medium mb-1">Penerima</p>
+                              <p className="text-surface-900">{recipientName} • {phone}</p>
+                            </div>
+                            {deliveryMethod === "delivery" && address && (
+                              <div className="sm:col-span-2">
+                                <p className="text-surface-500 font-medium mb-1">Alamat Tujuan</p>
+                                <p className="text-surface-900 bg-white p-2 border border-surface-200 rounded-lg">{address}</p>
+                              </div>
+                            )}
+                          </div>
+                          <div className="bg-white p-4 rounded-xl border border-surface-200 min-w-[200px] flex flex-col justify-center">
+                            <p className="text-surface-500 font-medium mb-1">Total Belanja</p>
+                            <p className="text-2xl font-extrabold text-brand-600">{formatPrice(order.total_price)}</p>
+                          </div>
                         </div>
                       </div>
                     );

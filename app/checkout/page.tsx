@@ -26,6 +26,9 @@ export default function CheckoutPage() {
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
 
+  // Addresses
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+
   // Shipping state
   const [recipientName, setRecipientName] = useState("");
   const [phone, setPhone] = useState("");
@@ -38,9 +41,28 @@ export default function CheckoutPage() {
 
   const checkAuth = async () => {
     try {
-      // @ts-ignore
       const { data } = await insforge.auth.getCurrentUser();
-      setUser(data?.user || null);
+      const currentUser = data?.user || null;
+      setUser(currentUser);
+      
+      if (currentUser) {
+        // Fetch addresses
+        const { data: addrs } = await insforge.database
+          .from("addresses")
+          .select("*")
+          .eq("user_id", currentUser.id)
+          .order("is_default", { ascending: false });
+          
+        if (addrs && addrs.length > 0) {
+          setSavedAddresses(addrs);
+          const defaultAddr = addrs.find((a: any) => a.is_default) || addrs[0];
+          if (defaultAddr) {
+            setRecipientName(defaultAddr.recipient);
+            setPhone(defaultAddr.phone);
+            setAddress(defaultAddr.address);
+          }
+        }
+      }
     } catch (e) {
       setUser(null);
     } finally {
@@ -281,6 +303,35 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {deliveryMethod === "delivery" && savedAddresses.length > 0 && (
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-surface-700 mb-1">Gunakan Alamat Tersimpan</label>
+                        <select 
+                          className="w-full p-2.5 rounded-lg border border-surface-200 bg-surface-50 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none"
+                          onChange={(e) => {
+                            if (e.target.value === "new") {
+                              setRecipientName("");
+                              setPhone("");
+                              setAddress("");
+                            } else {
+                              const selected = savedAddresses.find(a => a.id === e.target.value);
+                              if (selected) {
+                                setRecipientName(selected.recipient);
+                                setPhone(selected.phone);
+                                setAddress(selected.address);
+                              }
+                            }
+                          }}
+                        >
+                          <option value="new">-- Buat Alamat Baru --</option>
+                          {savedAddresses.map((addr) => (
+                            <option key={addr.id} value={addr.id}>
+                              {addr.label} - {addr.recipient} ({addr.phone})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                     <div>
                       <label className="block text-sm font-medium text-surface-700 mb-1">Nama Penerima</label>
                       <Input 
@@ -297,7 +348,7 @@ export default function CheckoutPage() {
                       <Input 
                         type="tel" 
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                         placeholder="Cth: 081234567890"
                         disabled={!user}
                         className="bg-surface-50"

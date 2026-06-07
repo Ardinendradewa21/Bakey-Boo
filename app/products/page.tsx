@@ -31,7 +31,13 @@ async function getProducts(searchQuery?: string, categoryFilters?: string[]) {
       .order("created_at", { ascending: false });
 
     if (searchQuery) {
-      query = query.ilike("title", `%${searchQuery}%`);
+      // Create a more flexible search matching title, category, and description
+      const terms = searchQuery.split(' ').filter(t => t.trim().length > 0);
+      if (terms.length > 0) {
+        // We search if ANY of the terms match ANY of the fields (loose search)
+        const orConditions = terms.map(term => `title.ilike.%${term}%,category.ilike.%${term}%,description.ilike.%${term}%`);
+        query = query.or(orConditions.join(','));
+      }
     }
 
     if (categoryFilters && categoryFilters.length > 0) {
