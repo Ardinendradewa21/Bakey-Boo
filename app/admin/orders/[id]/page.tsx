@@ -12,10 +12,10 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
-  // Fetch order details
+  // Fetch order details with joined items and payment
   const { data: order, error: orderError } = await insforge.database
     .from("orders")
-    .select("*")
+    .select("*, items:order_items(*, product:products(id, title, slug, category, images:product_images(url))), payment:payments(*)")
     .eq("id", resolvedParams.id)
     .single();
 
@@ -23,37 +23,37 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
     notFound();
   }
 
-  // Fetch order items and products separately in case foreign key join fails
-  const { data: orderItemsData, error: itemsError } = await insforge.database
-    .from("order_items")
-    .select("*")
-    .eq("order_id", resolvedParams.id);
+  let orderItems = order.items || [];
+  const payment = order.payment && order.payment.length > 0 ? order.payment[0] : null;
 
-  let orderItems = orderItemsData || [];
-
-  if (orderItems.length > 0) {
-    const productIds = orderItems.map((item: any) => item.product_id).filter(Boolean);
-    if (productIds.length > 0) {
-      const { data: productsData } = await insforge.database
-        .from("products")
-        .select("id, title, slug, category")
-        .in("id", productIds);
+  // Fallback if order_items are missing (e.g. failed to insert due to RLS)
+  if (orderItems.length === 0 && payment?.midtrans_response) {
+    try {
+      const meta = JSON.parse(payment.midtrans_response);
+      if (meta.variants && meta.variants.length > 0) {
+        const productIds = meta.variants.map((v: any) => v.id);
+        const { data: productsData } = await insforge.database
+          .from("products")
+          .select("id, title, slug, price, category, images:product_images(url)")
+          .in("id", productIds);
         
-      if (productsData) {
-        orderItems = orderItems.map((item: any) => ({
-          ...item,
-          products: productsData.find(p => p.id === item.product_id) || null
-        }));
+        if (productsData) {
+          orderItems = meta.variants.map((v: any) => {
+            const p = productsData.find((p: any) => p.id === v.id);
+            return {
+              id: v.id + "-fallback",
+              product_id: v.id,
+              price: v.price || (p ? p.price : 0),
+              quantity: v.quantity || 1,
+              selected_flavor: v.flavor,
+              selected_size: v.size,
+              product: p
+            };
+          });
+        }
       }
-    }
+    } catch(e) {}
   }
-
-  // Fetch payment details
-  const { data: payment } = await insforge.database
-    .from("payments")
-    .select("*")
-    .eq("order_id", resolvedParams.id)
-    .single();
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -142,24 +142,48 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
             </div>
             <div className="p-6">
               <div className="space-y-4">
-                {orderItems?.map((item: any) => (
+                {orderItems?.map((item: any) => {
+                  const product = item.product || item.products;
+                  
+                  // Extract variants from payment info if exists
+                  let variantFlavor = item.selected_flavor;
+                  let variantSize = item.selected_size;
+                  if (shippingInfo && shippingInfo.variants) {
+                    const variant = shippingInfo.variants.find((v: any) => v.id === item.product_id);
+                    if (variant) {
+                      variantFlavor = variant.flavor;
+                      variantSize = variant.size;
+                    }
+                  }
+
+                  return (
                   <div key={item.id} className="flex gap-4 p-4 rounded-lg border border-surface-100 bg-surface-50/30">
-                    <div className="w-16 h-16 bg-surface-100 rounded-md flex items-center justify-center overflow-hidden shrink-0">
-                      {/* We could fetch the image here, but for now just use a placeholder icon if no image joined */}
-                      <ShoppingBag className="size-6 text-surface-300" />
+                    <div className="w-16 h-16 bg-surface-100 rounded-md flex items-center justify-center overflow-hidden shrink-0 relative border border-surface-200">
+                      {product?.images?.[0]?.url ? (
+                        <img src={product.images[0].url} alt={product.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <ShoppingBag className="size-6 text-surface-300" />
+                      )}
                     </div>
                     <div className="flex-1">
-                      <Link href={`/product/${item.products?.slug}`} className="font-medium text-surface-900 hover:text-brand-600 transition-colors line-clamp-1">
-                        {item.products?.title || 'Produk Tidak Ditemukan'}
+                      <Link href={`/product/${product?.slug}`} className="font-medium text-surface-900 hover:text-brand-600 transition-colors line-clamp-1">
+                        {product?.title || 'Produk Tidak Ditemukan'}
                       </Link>
-                      <p className="text-sm text-surface-500 mt-1 capitalize">{item.products?.category || '-'}</p>
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        <p className="text-sm text-surface-500 capitalize">{product?.category || '-'}</p>
+                        {(variantFlavor || variantSize) && (
+                          <p className="text-xs font-medium text-brand-700 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-100">
+                            {variantFlavor} {variantSize && `(${variantSize})`}
+                          </p>
+                        )}
+                      </div>
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-surface-900">{formatPrice(item.price)}</p>
-                      <p className="text-xs text-surface-500 mt-1">Qty: 1</p>
+                      <p className="text-xs text-surface-500 mt-1">Qty: {item.quantity || 1}</p>
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
 
               {/* Total Calculation */}

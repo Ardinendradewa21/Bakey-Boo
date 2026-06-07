@@ -1,121 +1,116 @@
-import { Metadata } from "next";
+import { Coffee, Users, Target, Heart } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { Leaf, Target, Heart, Zap } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Tentang Kami | Bakey Boo",
-  description: "Kenali lebih dalam Bakey Boo — toko roti dan donat premium yang menyajikan kebahagiaan manis setiap harinya.",
-  openGraph: {
-    title: "Tentang Kami | Bakey Boo",
-    description: "Kenali lebih dalam Bakey Boo — toko roti dan donat premium yang menyajikan kebahagiaan manis setiap harinya.",
-  },
+  description: "Mengenal lebih dekat tim di balik Bakey Boo.",
 };
 
-const values = [
+const team = [
   {
-    icon: Leaf,
-    title: "Bahan Alami",
-    description:
-      "Kami menggunakan bahan-bahan terbaik, tanpa pengawet buatan, demi menyajikan rasa yang otentik dan aman dikonsumsi setiap hari.",
+    name: "Faqih Aulia Ardinanendra Dewa",
+    nim: "124230150",
+    role: "Project Manager",
+    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Faqih&backgroundColor=fef3c7",
   },
   {
-    icon: Heart,
-    title: "Dibuat dengan Cinta",
-    description:
-      "Setiap adonan diuleni dan dipanggang sepenuh hati. Kami percaya makanan yang dibuat dengan cinta akan terasa lebih lezat.",
+    name: "Lusiana Dwi Wahyuni",
+    nim: "124230019",
+    role: "UI/UX Designer",
+    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lusiana&backgroundColor=fce7f3",
   },
   {
-    icon: Target,
-    title: "Kualitas Premium",
-    description:
-      "Dari pemilihan mentega, tepung, hingga cokelat pilihan, kami tidak pernah berkompromi soal standar mutu produk kami.",
+    name: "Syaiful Akmal Aufa Rofiqi",
+    nim: "124230132",
+    role: "Backend Developer",
+    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Syaiful&backgroundColor=dbeafe",
   },
   {
-    icon: Zap,
-    title: "Cepat & Hangat",
-    description:
-      "Layanan pengiriman kami memastikan roti atau donat tiba di rumah Anda dalam kondisi sebaik saat baru keluar dari oven.",
+    name: "Anastasya Eutikes",
+    nim: "124230138",
+    role: "Frontend Developer",
+    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anastasya&backgroundColor=e0e7ff",
+  },
+  {
+    name: "Kadek Panji Nugraha Kresnawan",
+    nim: "124230160",
+    role: "Quality Assurance",
+    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kadek&backgroundColor=dcfce3",
   },
 ];
 
-export default function AboutPage() {
+export default function TentangPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-surface-50 pt-24 pb-20">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <div className="bg-white p-8 md:p-12 rounded-3xl border border-surface-200 shadow-sm">
-            
-            <div className="prose prose-brand max-w-none">
-              <div className="text-center mb-10">
-                <h1 className="text-3xl md:text-5xl font-heading font-extrabold text-surface-900 mb-6">
-                  Freshly Baked,<br/>Delivered with Love.
-                </h1>
-                <p className="text-lg text-surface-600 leading-relaxed max-w-2xl mx-auto">
-                  Berawal dari kecintaan kami pada aroma panggangan roti segar di pagi hari, 
-                  kami memutuskan untuk membagikan kebahagiaan tersebut kepada Anda melalui Bakey Boo.
-                </p>
+      <main className="bg-surface-50 min-h-screen pb-20">
+      {/* Hero Section */}
+      <section className="bg-brand-600 text-white py-20">
+        <div className="container mx-auto px-4 text-center max-w-3xl">
+          <Coffee className="size-16 mx-auto mb-6 text-brand-200" />
+          <h1 className="text-4xl md:text-5xl font-bold font-heading mb-6">Cerita di Balik Bakey Boo</h1>
+          <p className="text-lg text-brand-100 leading-relaxed">
+            Berawal dari kecintaan pada aroma roti yang baru dipanggang, kami memiliki misi untuk mengantarkan kebahagiaan manis ke setiap rumah. Kami menggabungkan resep tradisional dengan teknologi modern.
+          </p>
+        </div>
+      </section>
+
+      {/* Nilai-nilai */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="text-center p-6">
+              <div className="w-16 h-16 mx-auto bg-brand-50 rounded-full flex items-center justify-center mb-4">
+                <Heart className="size-8 text-brand-600" />
               </div>
-
-              <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-12">
-                <Image
-                  src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1200"
-                  alt="Bakey Boo Kitchen"
-                  fill
-                  className="object-cover"
-                />
+              <h3 className="text-xl font-bold text-surface-900 mb-2">Dibuat Penuh Cinta</h3>
+              <p className="text-surface-600">Setiap roti dan donat kami buat seolah-olah untuk keluarga kami sendiri.</p>
+            </div>
+            <div className="text-center p-6">
+              <div className="w-16 h-16 mx-auto bg-brand-50 rounded-full flex items-center justify-center mb-4">
+                <Target className="size-8 text-brand-600" />
               </div>
-
-              <h2>Cerita Kami</h2>
-              <p>
-                Bakey Boo adalah toko roti dan donat rumahan yang tumbuh menjadi tempat favorit keluarga. 
-                Kami percaya bahwa secangkir kopi pagi atau teh sore tidak akan lengkap tanpa sepotong roti 
-                sobek yang empuk atau donat bertabur gula yang manis.
-              </p>
-              <p>
-                Misi kami sederhana: <strong>Membawa kehangatan dapur roti langsung ke meja makan Anda.</strong> 
-                Kami memastikan setiap produk yang keluar dari oven Bakey Boo selalu segar, lezat, dan dibuat 
-                dengan penuh cinta.
-              </p>
+              <h3 className="text-xl font-bold text-surface-900 mb-2">Kualitas Premium</h3>
+              <p className="text-surface-600">Hanya menggunakan bahan-bahan segar pilihan tanpa pengawet buatan.</p>
             </div>
-
-            <hr className="my-12 border-surface-100" />
-
-            <div className="mb-12">
-              <h2 className="text-2xl font-heading font-bold text-surface-900 mb-8 text-center">Nilai-Nilai Kami</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {values.map((value, index) => (
-                  <div key={index} className="flex gap-4">
-                    <div className="shrink-0 mt-1">
-                      <div className="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600">
-                        <value.icon className="w-6 h-6" />
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-surface-900 mb-2">{value.title}</h3>
-                      <p className="text-surface-600 text-sm leading-relaxed">{value.description}</p>
-                    </div>
-                  </div>
-                ))}
+            <div className="text-center p-6">
+              <div className="w-16 h-16 mx-auto bg-brand-50 rounded-full flex items-center justify-center mb-4">
+                <Users className="size-8 text-brand-600" />
               </div>
+              <h3 className="text-xl font-bold text-surface-900 mb-2">Layanan Terbaik</h3>
+              <p className="text-surface-600">Kemudahan memesan secara online dan pengiriman langsung ke depan pintu Anda.</p>
             </div>
-
-            <div className="bg-brand-50 rounded-2xl p-8 text-center mt-12 border border-brand-100">
-              <h2 className="text-2xl font-heading font-bold text-brand-900 mb-4">Mulai Cicipi Menu Kami</h2>
-              <p className="text-brand-700 mb-6 max-w-lg mx-auto">
-                Jelajahi koleksi donat dan roti kami. Pesan hari ini dan nikmati selagi hangat!
-              </p>
-              <Link href="/products" className={buttonVariants({ size: "lg", className: "bg-brand-600 hover:bg-brand-700" })}>
-                Lihat Menu Sekarang
-              </Link>
-            </div>
-
           </div>
         </div>
+      </section>
+
+      {/* Tim IT / Kelompok */}
+      <section className="py-20">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-surface-900 mb-4 font-heading">Tim Pengembang (IT)</h2>
+            <p className="text-surface-600 max-w-2xl mx-auto">
+              Sistem toko online Bakey Boo dibangun dan dikembangkan dengan dedikasi tinggi oleh talenta-talenta IT luar biasa berikut ini.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-8">
+            {team.map((member, index) => (
+              <div key={index} className="bg-white rounded-2xl border border-surface-200 p-6 shadow-sm hover:shadow-md transition-shadow text-center w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.5rem)]">
+                <img 
+                  src={member.image} 
+                  alt={member.name} 
+                  className="w-24 h-24 mx-auto rounded-full border-4 border-brand-50 mb-4 bg-surface-100"
+                />
+                <h3 className="text-lg font-bold text-surface-900 line-clamp-1" title={member.name}>{member.name}</h3>
+                <p className="text-sm font-mono text-surface-500 mb-2 bg-surface-100 inline-block px-2 py-0.5 rounded mt-1">NIM: {member.nim}</p>
+                <p className="font-medium text-brand-600 mt-2">{member.role}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
       </main>
       <Footer />
     </>

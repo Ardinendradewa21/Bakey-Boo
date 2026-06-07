@@ -78,7 +78,11 @@ export async function POST(req: Request) {
           quantity: item.quantity,
         }));
         
-        await insforge.database.from("order_items").insert(orderItemsToInsert);
+        const { error: itemsError } = await insforge.database.from("order_items").insert(orderItemsToInsert);
+        if (itemsError) {
+          console.error("Failed to insert order_items:", itemsError);
+          // If RLS blocks it, this might be the reason items are empty.
+        }
       }
     } catch (dbError) {
       console.error("Database operation failed:", dbError);

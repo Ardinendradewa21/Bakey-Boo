@@ -12,15 +12,32 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Eye } from "lucide-react";
+import { Eye, Search } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminOrdersPage() {
-  const { data: orders } = await insforge.database
+export default async function AdminOrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const dateFilter = typeof params.date === "string" ? params.date : "";
+
+  let query = insforge.database
     .from("orders")
     .select("*")
     .order("created_at", { ascending: false });
+
+  if (dateFilter) {
+    // start of day WIB (+07:00)
+    const startDate = new Date(`${dateFilter}T00:00:00+07:00`).toISOString();
+    // end of day WIB
+    const endDate = new Date(`${dateFilter}T23:59:59+07:00`).toISOString();
+    query = query.gte("created_at", startDate).lte("created_at", endDate);
+  }
+
+  const { data: orders } = await query;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -41,9 +58,29 @@ export default async function AdminOrdersPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-surface-900">Daftar Pesanan</h1>
-        <p className="text-surface-500 text-sm mt-1">Pantau seluruh riwayat transaksi pelanggan</p>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-surface-900">Daftar Pesanan</h1>
+          <p className="text-surface-500 text-sm mt-1">Pantau seluruh riwayat transaksi pelanggan</p>
+        </div>
+        
+        <form className="flex items-center gap-2 bg-white p-1 rounded-lg border border-surface-200 shadow-sm">
+          <input 
+            type="date" 
+            name="date"
+            defaultValue={dateFilter}
+            className="text-sm px-3 py-1.5 focus:outline-none bg-transparent"
+          />
+          <button type="submit" className="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-md font-medium text-sm transition-colors flex items-center gap-1.5">
+            <Search className="size-3.5" />
+            Filter
+          </button>
+          {dateFilter && (
+            <Link href="/admin/orders" className="px-3 py-1.5 bg-surface-100 hover:bg-surface-200 text-surface-600 rounded-md font-medium text-sm transition-colors">
+              Reset
+            </Link>
+          )}
+        </form>
       </div>
 
       <div className="rounded-xl border border-surface-200 bg-white overflow-hidden">

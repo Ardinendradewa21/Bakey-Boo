@@ -47,7 +47,7 @@ async function getStats() {
     for (let i = 6; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
-      const dateString = d.toLocaleDateString("id-ID", { weekday: 'short' }); // e.g. "Sen"
+      const dateString = d.toLocaleDateString("id-ID", { weekday: 'short', timeZone: 'Asia/Jakarta' }); // e.g. "Sen"
       chartDataMap[dateString] = 0;
     }
     
@@ -58,7 +58,7 @@ async function getStats() {
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
       
       if (diffDays <= 7) {
-        const dateString = orderDate.toLocaleDateString("id-ID", { weekday: 'short' });
+        const dateString = orderDate.toLocaleDateString("id-ID", { weekday: 'short', timeZone: 'Asia/Jakarta' });
         if (chartDataMap[dateString] !== undefined) {
            chartDataMap[dateString] += (order.total_price || 0);
         }

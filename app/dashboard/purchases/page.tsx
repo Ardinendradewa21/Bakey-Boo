@@ -58,11 +58,46 @@ export default function PurchasesPage() {
       // Fetch orders for this user
       const { data: ordersData } = await insforge.database
         .from("orders")
-        .select("*, items:order_items(*, product:products(id, title, slug, category, images:product_images(url))), payment:payments(midtrans_response)")
+        .select("*, items:order_items(*, product:products(id, title, slug, price, category, images:product_images(url))), payment:payments(midtrans_response)")
         .eq("buyer_id", authData.user.id)
         .order("created_at", { ascending: false });
 
-      setOrders(ordersData || []);
+      // Process fallbacks for missing order_items (e.g. if insert failed due to RLS)
+      const processedOrders = [];
+      for (const order of (ordersData || [])) {
+        if (!order.items || order.items.length === 0) {
+          try {
+            if (order.payment && order.payment.length > 0 && order.payment[0].midtrans_response) {
+              const meta = JSON.parse(order.payment[0].midtrans_response);
+              if (meta.variants && meta.variants.length > 0) {
+                const productIds = meta.variants.map((v: any) => v.id);
+                const { data: productsData } = await insforge.database
+                  .from("products")
+                  .select("id, title, slug, price, category, images:product_images(url)")
+                  .in("id", productIds);
+                
+                if (productsData) {
+                  order.items = meta.variants.map((v: any) => {
+                    const p = productsData.find((p: any) => p.id === v.id);
+                    return {
+                      id: v.id + "-fallback",
+                      product_id: v.id,
+                      price: v.price || (p ? p.price : 0),
+                      quantity: v.quantity || 1,
+                      selected_flavor: v.flavor,
+                      selected_size: v.size,
+                      product: p
+                    };
+                  });
+                }
+              }
+            }
+          } catch(e) {}
+        }
+        processedOrders.push(order);
+      }
+
+      setOrders(processedOrders);
     } catch (err) {
       router.push("/login");
     } finally {
@@ -111,6 +146,33 @@ export default function PurchasesPage() {
       toast.error("Gagal mengirim ulasan.");
     } finally {
       setIsSubmittingReview(false);
+    }
+  };
+
+  const handleCancelOrder = async (orderId: string, createdAt: string) => {
+    const diffMinutes = (new Date().getTime() - new Date(createdAt).getTime()) / 60000;
+    if (diffMinutes > 10) {
+      toast.error("Batas waktu pembatalan telah lewat.", { description: "Pembatalan otomatis hanya dapat dilakukan maksimal 10 menit setelah pesanan dibuat." });
+      return;
+    }
+    
+    if (!confirm("Apakah Anda yakin ingin membatalkan pesanan ini?")) return;
+
+    try {
+      const { error } = await insforge.database
+        .from("orders")
+        .update({ status: "cancel" })
+        .eq("id", orderId);
+        
+      if (error) throw error;
+      
+      // Update payment status as well
+      await insforge.database.from("payments").update({ status: "cancel" }).eq("order_id", orderId);
+
+      toast.success("Pesanan berhasil dibatalkan");
+      checkUserAndFetch();
+    } catch (err) {
+      toast.error("Gagal membatalkan pesanan.");
     }
   };
 
@@ -170,6 +232,19 @@ export default function PurchasesPage() {
                     <div className="flex items-center gap-4">
                       <span className="font-bold text-surface-900">{formatPrice(order.total_price)}</span>
                       {getStatusBadge(order.status)}
+                      
+                      {/* Cancel Button - Only within 10 mins and active status */}
+                      {(order.status === "pending" || order.status === "completed" || order.status === "settlement" || order.status === "capture") && 
+                       (new Date().getTime() - new Date(order.created_at).getTime()) / 60000 <= 10 && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-7 text-xs px-3 text-red-600 border-red-200 hover:bg-red-50" 
+                          onClick={() => handleCancelOrder(order.id, order.created_at)}
+                        >
+                          Batalkan
+                        </Button>
+                      )}
                     </div>
                   </div>
 
@@ -242,10 +317,8 @@ export default function PurchasesPage() {
                                     setReviewOrderId(null);
                                   }
                                 }}>
-                                  <DialogTrigger asChild>
-                                    <Button variant="outline" size="sm" className="mt-2 h-8 text-xs font-semibold text-brand-700 border-brand-200 hover:bg-brand-50">
-                                      Beri Ulasan
-                                    </Button>
+                                  <DialogTrigger render={<Button variant="outline" size="sm" className="mt-2 h-8 text-xs font-semibold text-brand-700 border-brand-200 hover:bg-brand-50" />}>
+                                    Beri Ulasan
                                   </DialogTrigger>
                                   <DialogContent className="sm:max-w-md">
                                     <DialogHeader>

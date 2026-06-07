@@ -19,7 +19,7 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  const isAdminRoute = ADMIN_ROUTES.some((r) => pathname.startsWith(r));
+  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
   const isProtectedRoute = PROTECTED_ROUTES.some((r) => pathname.startsWith(r));
   const isAuthRoute = AUTH_ROUTES.some((r) => pathname.startsWith(r));
 
