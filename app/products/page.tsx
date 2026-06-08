@@ -133,8 +133,8 @@ export default async function ProductsPage({
               {/* Product Grid */}
               {products.length > 0 ? (
                 <ProductGrid>
-                  {products.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                  {products.map((product, index) => (
+                    <ProductCard key={product.id} product={product} priority={index < 4} />
                   ))}
                 </ProductGrid>
               ) : (

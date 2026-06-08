@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { HomeSearchBar } from "@/components/home/HomeSearchBar";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -65,22 +66,7 @@ export default function Home() {
 
         {/* Search Bar - Offset overlapping hero */}
         <div className="container mx-auto px-4 -mt-8 relative z-20">
-          <div className="bg-white rounded-2xl shadow-xl shadow-surface-200/50 p-2 md:p-4 max-w-4xl mx-auto border border-surface-100 glass">
-            <form action="/products" method="GET" className="flex flex-col md:flex-row gap-2">
-              <div className="relative flex-grow">
-                <Search className="absolute left-4 top-3.5 h-5 w-5 text-surface-400" />
-                <input 
-                  type="text"
-                  name="search"
-                  placeholder="Cari roti cokelat, donat gula, dll..." 
-                  className="w-full h-12 pl-12 pr-4 bg-surface-50 border-none rounded-xl focus:ring-2 focus:ring-brand-500 transition-shadow text-base"
-                />
-              </div>
-              <button type="submit" className={cn(buttonVariants({ size: "default" }), "h-12 px-8 bg-surface-900 hover:bg-surface-800 text-white rounded-xl text-base font-medium")}>
-                Cari Menu
-              </button>
-            </form>
-          </div>
+          <HomeSearchBar />
         </div>
 
         {/* Features / Trust Section */}

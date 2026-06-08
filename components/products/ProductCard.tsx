@@ -10,9 +10,10 @@ import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
+  priority?: boolean;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, priority = false }: ProductCardProps) {
   const thumbnailUrl =
     product.images && product.images.length > 0
       ? product.images[0].url
@@ -53,6 +54,7 @@ export function ProductCard({ product }: ProductCardProps) {
           src={thumbnailUrl}
           alt={product.title}
           fill
+          priority={priority}
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />

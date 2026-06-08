@@ -29,6 +29,11 @@ export function AdminSidebar() {
 
   const handleLogout = async () => {
     await insforge.auth.signOut();
+    try {
+      await fetch("/api/auth/session", { method: "DELETE" });
+    } catch (e) {
+      console.error("Failed to clear session", e);
+    }
     window.location.href = "/";
   };
 
