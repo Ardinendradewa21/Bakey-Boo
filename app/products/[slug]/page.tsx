@@ -75,7 +75,7 @@ async function getProductDetail(slug: string) {
       .select(`
         *,
         images:product_images(id, url, sort_order),
-        reviews(id, rating, comment, created_at)
+        reviews(id, rating, comment, created_at, buyer_id)
       `)
       .eq("slug", slug)
       .eq("is_published", true)
@@ -96,13 +96,43 @@ async function getProductDetail(slug: string) {
         if (updateError) console.error("Failed to increment view count:", updateError);
       });
     
+    let reviews = data.reviews || [];
+    
+    // Cross-fetch buyer profiles
+    if (reviews.length > 0) {
+      const buyerIds = [...new Set(reviews.map((r: any) => r.buyer_id).filter(Boolean))];
+      if (buyerIds.length > 0) {
+        const { data: buyers } = await insforge.database
+          .from("users_profile")
+          .select("user_id, name")
+          .in("user_id", buyerIds);
+          
+        if (buyers) {
+          reviews = reviews.map((r: any) => {
+            const buyer = buyers.find((b: any) => b.user_id === r.buyer_id);
+            return {
+              ...r,
+              buyer: buyer ? { name: buyer.name } : { name: "User" }
+            };
+          });
+        }
+      }
+    }
+
+    const reviewCount = reviews.length;
+    const ratingAvg = reviewCount > 0 
+      ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviewCount 
+      : 0;
+
+    data.reviews = reviews;
+
     return {
       ...data,
       price: Number(data.price),
       original_price: data.original_price ? Number(data.original_price) : null,
       is_bundle: data.is_bundle || false,
-      rating_avg: Number(data.rating_avg || 0),
-      review_count: Number(data.review_count || 0),
+      rating_avg: ratingAvg,
+      review_count: reviewCount,
       flavors: data.flavors || (data.category === 'donat' ? ["Coklat", "Keju", "Matcha", "Strawberry"] : []),
       sizes: data.sizes || (data.category === 'roti' ? ["Reguler", "Jumbo"] : ["Mini", "Reguler"])
     } as Product;
@@ -225,20 +255,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                     <span className="text-surface-500 text-sm">{product.review_count} Ulasan</span>
                   </div>
 
-                  <div className="mb-6">
-                    <span className="block text-sm font-medium text-surface-500 mb-1">Harga</span>
-                    <div className="flex items-center gap-3">
-                      <div className="text-4xl font-extrabold text-gradient-accent">
-                        {formatPrice(product.price)}
-                      </div>
-                      {product.original_price && product.original_price > product.price && (
-                        <div className="text-xl text-surface-400 line-through decoration-red-500/50">
-                          {formatPrice(product.original_price)}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
+                  {/* Price and CTA Buttons are now combined to support dynamic variant pricing */}
                   <ProductCTAButtons product={product} />
                   
                   <div className="mt-6 flex flex-col gap-2 text-sm text-surface-600 bg-surface-50 p-4 rounded-xl">

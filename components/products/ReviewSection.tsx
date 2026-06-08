@@ -29,10 +29,10 @@ export function ReviewSection({ reviews, ratingAvg, reviewCount }: ReviewSection
           </div>
           
           <div className="flex-1 flex flex-col justify-center gap-2">
-            {/* Simulasi rating bars */}
+            {/* Rating distribution bars */}
             {[5, 4, 3, 2, 1].map((rating) => {
-              // Simulasi data untuk demo
-              const percentage = rating === 5 ? 70 : rating === 4 ? 20 : rating === 3 ? 10 : 0;
+              const count = reviews.filter(r => Math.round(r.rating) === rating).length;
+              const percentage = reviewCount > 0 ? Math.round((count / reviewCount) * 100) : 0;
               return (
                 <div key={rating} className="flex items-center gap-3">
                   <div className="flex items-center gap-1 w-12 text-sm font-medium text-surface-700">

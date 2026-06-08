@@ -25,7 +25,8 @@ async function getProducts(searchQuery?: string, categoryFilters?: string[]) {
       .from("products")
       .select(`
         id, title, slug, price, category,
-        images:product_images(url)
+        images:product_images(url),
+        reviews(rating)
       `)
       .eq("is_published", true)
       .order("created_at", { ascending: false });
@@ -51,13 +52,21 @@ async function getProducts(searchQuery?: string, categoryFilters?: string[]) {
       return [];
     }
     
-    // Transform data
-    return (data || []).map((row: any) => ({
-      ...row,
-      price: Number(row.price),
-      rating_avg: Number(row.rating_avg || 0),
-      review_count: Number(row.review_count || 0)
-    })) as Product[];
+    // Transform data and calculate average rating
+    return (data || []).map((row: any) => {
+      const reviews = row.reviews || [];
+      const reviewCount = reviews.length;
+      const ratingAvg = reviewCount > 0 
+        ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviewCount 
+        : 0;
+
+      return {
+        ...row,
+        price: Number(row.price),
+        rating_avg: Number(ratingAvg),
+        review_count: Number(reviewCount)
+      };
+    }) as Product[];
   } catch (error) {
     console.error("Failed to fetch products:", error);
     return [];

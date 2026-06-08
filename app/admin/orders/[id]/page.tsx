@@ -142,7 +142,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
             </div>
             <div className="p-6">
               <div className="space-y-4">
-                {orderItems?.map((item: any) => {
+                {orderItems?.map((item: any, index: number) => {
                   const product = item.product || item.products;
                   
                   // Extract variants from payment info if exists
@@ -157,7 +157,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
                   }
 
                   return (
-                  <div key={item.id} className="flex gap-4 p-4 rounded-lg border border-surface-100 bg-surface-50/30">
+                  <div key={`${item.id}-${index}`} className="flex gap-4 p-4 rounded-lg border border-surface-100 bg-surface-50/30">
                     <div className="w-16 h-16 bg-surface-100 rounded-md flex items-center justify-center overflow-hidden shrink-0 relative border border-surface-200">
                       {product?.images?.[0]?.url ? (
                         <img src={product.images[0].url} alt={product.title} className="w-full h-full object-cover" />

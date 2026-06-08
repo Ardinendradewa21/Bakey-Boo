@@ -9,7 +9,8 @@ import {
   LogOut,
   Leaf,
   Settings,
-  Users
+  Users,
+  Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { insforge } from "@/lib/insforge";
@@ -18,6 +19,7 @@ const navItems = [
   { href: "/admin", icon: LayoutDashboard, label: "Overview" },
   { href: "/admin/products", icon: Package, label: "Produk" },
   { href: "/admin/orders", icon: ShoppingCart, label: "Pesanan" },
+  { href: "/admin/reviews", icon: Star, label: "Ulasan" },
   { href: "/admin/users", icon: Users, label: "Pengguna" },
   { href: "/admin/settings", icon: Settings, label: "Pengaturan" },
 ];

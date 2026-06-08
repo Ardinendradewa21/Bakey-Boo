@@ -8,6 +8,7 @@ import { ShoppingCart, Zap } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { formatPrice } from "@/lib/utils";
 
 interface ProductCTAButtonsProps {
   product: Product;
@@ -22,13 +23,31 @@ export function ProductCTAButtons({ product }: ProductCTAButtonsProps) {
   const [selectedSize, setSelectedSize] = useState<string>(product.sizes?.[0] || "");
   const [quantity, setQuantity] = useState<number>(1);
 
+  // Calculate dynamic variant price
+  const getVariantPrice = (basePrice: number, size: string) => {
+    if (!size) return basePrice;
+    const s = size.toLowerCase();
+    if (s === "mini") return Math.max(5000, basePrice - 5000);
+    if (s === "jumbo" || s === "large") return basePrice + 10000;
+    return basePrice; // Reguler or Normal
+  };
+
+  const currentPrice = getVariantPrice(product.price, selectedSize);
+  const currentOriginalPrice = product.original_price ? getVariantPrice(product.original_price, selectedSize) : null;
+
   const handleAddToCart = () => {
     if ((product.flavors?.length && !selectedFlavor) || (product.sizes?.length && !selectedSize)) {
       toast.error("Pilih varian", { description: "Silakan pilih rasa dan ukuran terlebih dahulu." });
       return;
     }
     
-    const added = cart.addItem(product, quantity, selectedFlavor, selectedSize);
+    // Mutate the product price so the cart and database store the variant price
+    const productWithVariantPrice = {
+      ...product,
+      price: currentPrice
+    };
+    
+    const added = cart.addItem(productWithVariantPrice, quantity, selectedFlavor, selectedSize);
     if (added) {
       toast.success(`${product.title} ditambahkan ke keranjang`, {
         description: `Jumlah: ${quantity} | Varian: ${selectedFlavor ? selectedFlavor : ''} ${selectedSize ? `(${selectedSize})` : ''}`,
@@ -38,6 +57,21 @@ export function ProductCTAButtons({ product }: ProductCTAButtonsProps) {
 
   return (
     <div className="flex flex-col gap-5">
+      {/* Dynamic Price Display */}
+      <div className="mb-2">
+        <span className="block text-sm font-medium text-surface-500 mb-1">Harga</span>
+        <div className="flex items-center gap-3">
+          <div className="text-4xl font-extrabold text-gradient-accent transition-all">
+            {formatPrice(currentPrice)}
+          </div>
+          {currentOriginalPrice && currentOriginalPrice > currentPrice && (
+            <div className="text-xl text-surface-400 line-through decoration-red-500/50 transition-all">
+              {formatPrice(currentOriginalPrice)}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Variants UI */}
       {(product.flavors?.length || product.sizes?.length) ? (
         <div className="flex flex-col gap-4 mb-2">

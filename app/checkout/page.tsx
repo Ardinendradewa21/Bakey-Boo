@@ -46,20 +46,35 @@ export default function CheckoutPage() {
       setUser(currentUser);
       
       if (currentUser) {
-        // Fetch addresses
-        const { data: addrs } = await insforge.database
-          .from("addresses")
-          .select("*")
-          .eq("user_id", currentUser.id)
-          .order("is_default", { ascending: false });
+        let fetchedAddrs = [];
+        try {
+          const { data: addrs, error } = await insforge.database
+            .from("addresses")
+            .select("*")
+            .eq("user_id", currentUser.id)
+            .order("is_default", { ascending: false });
           
-        if (addrs && addrs.length > 0) {
-          setSavedAddresses(addrs);
-          const defaultAddr = addrs.find((a: any) => a.is_default) || addrs[0];
+          if (!error && addrs) {
+            fetchedAddrs = addrs;
+          }
+        } catch (e) {}
+
+        if (fetchedAddrs.length === 0 && typeof window !== 'undefined') {
+          const localData = localStorage.getItem(`addresses_${currentUser.id}`);
+          if (localData) {
+            try {
+              fetchedAddrs = JSON.parse(localData);
+            } catch(e) {}
+          }
+        }
+          
+        if (fetchedAddrs && fetchedAddrs.length > 0) {
+          setSavedAddresses(fetchedAddrs);
+          const defaultAddr = fetchedAddrs.find((a: any) => a.is_default) || fetchedAddrs[0];
           if (defaultAddr) {
-            setRecipientName(defaultAddr.recipient);
-            setPhone(defaultAddr.phone);
-            setAddress(defaultAddr.address);
+            setRecipientName(defaultAddr.recipient_name || "");
+            setPhone(defaultAddr.phone || "");
+            setAddress(defaultAddr.full_address || "");
           }
         }
       }
@@ -316,9 +331,9 @@ export default function CheckoutPage() {
                             } else {
                               const selected = savedAddresses.find(a => a.id === e.target.value);
                               if (selected) {
-                                setRecipientName(selected.recipient);
-                                setPhone(selected.phone);
-                                setAddress(selected.address);
+                                setRecipientName(selected.recipient_name || "");
+                                setPhone(selected.phone || "");
+                                setAddress(selected.full_address || "");
                               }
                             }
                           }}
@@ -326,7 +341,7 @@ export default function CheckoutPage() {
                           <option value="new">-- Buat Alamat Baru --</option>
                           {savedAddresses.map((addr) => (
                             <option key={addr.id} value={addr.id}>
-                              {addr.label} - {addr.recipient} ({addr.phone})
+                              {addr.label} - {addr.recipient_name} ({addr.phone})
                             </option>
                           ))}
                         </select>

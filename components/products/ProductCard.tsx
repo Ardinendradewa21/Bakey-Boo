@@ -87,24 +87,24 @@ export function ProductCard({ product }: ProductCardProps) {
         </h3>
 
         {/* Price & Rating */}
-        <div className="flex items-center justify-between pt-3 mt-auto border-t border-surface-100 border-dashed">
-          <div>
+        <div className="flex items-center justify-between pt-4 mt-auto border-t border-surface-100 gap-3">
+          <div className="flex flex-col">
             {hasDiscount && (
-              <p className="text-xs text-surface-400 line-through decoration-red-500/50">
+              <span className="text-[11px] font-medium text-surface-400 line-through decoration-red-500/50 mb-0.5">
                 {formatPrice(product.original_price!)}
-              </p>
+              </span>
             )}
-            <div className="font-bold text-xl text-surface-900">
+            <span className="font-bold text-lg text-brand-700 tracking-tight">
               {formatPrice(product.price)}
-            </div>
+            </span>
           </div>
           
-          <div className="flex items-center gap-1 bg-surface-50 px-2 py-1 rounded-md border border-surface-200 shrink-0">
-            <Star className="size-3.5 fill-star text-star" />
-            <span className="text-xs font-bold text-surface-800">
+          <div className="flex items-center gap-1.5 bg-brand-50/80 px-2.5 py-1.5 rounded-full shrink-0 ring-1 ring-brand-100/50 group-hover:bg-brand-100/80 transition-colors">
+            <Star className="size-3.5 fill-amber-400 text-amber-500" />
+            <span className="text-xs font-bold text-brand-900">
               {product.rating_avg ? product.rating_avg.toFixed(1) : "0.0"}
             </span>
-            <span className="text-xs text-surface-500">
+            <span className="text-[10px] text-brand-600/70 font-medium">
               ({product.review_count || 0})
             </span>
           </div>

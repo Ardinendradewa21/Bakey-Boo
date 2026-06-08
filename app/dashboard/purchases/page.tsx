@@ -126,8 +126,7 @@ export default function PurchasesPage() {
         .from("reviews")
         .insert({
           product_id: reviewProductId,
-          user_id: user.id,
-          order_id: reviewOrderId,
+          buyer_id: user.id,
           rating,
           comment: reviewText
         });
@@ -142,8 +141,9 @@ export default function PurchasesPage() {
       // Optionally re-fetch orders or mark the item as reviewed locally
       // For now, simple re-fetch
       checkUserAndFetch();
-    } catch (err) {
-      toast.error("Gagal mengirim ulasan.");
+    } catch (err: any) {
+      const errMsg = err.message || JSON.stringify(err);
+      toast.error(`Gagal mengirim ulasan: ${errMsg}`);
     } finally {
       setIsSubmittingReview(false);
     }
@@ -250,7 +250,7 @@ export default function PurchasesPage() {
 
                   {/* Order Items */}
                   <div className="divide-y divide-surface-100">
-                    {(order.items || []).map((item: any) => {
+                    {(order.items || []).map((item: any, index: number) => {
                       const product = item.product;
                       if (!product) return null;
                       const imageUrl = product.images?.[0]?.url;
@@ -271,7 +271,7 @@ export default function PurchasesPage() {
                       }
 
                       return (
-                        <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 px-6 py-5">
+                        <div key={`${item.id}-${index}`} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 px-6 py-5">
                           {/* Thumbnail */}
                           <div className="w-20 h-20 rounded-xl bg-surface-100 flex-shrink-0 flex items-center justify-center overflow-hidden relative border border-surface-200">
                             {imageUrl ? (
